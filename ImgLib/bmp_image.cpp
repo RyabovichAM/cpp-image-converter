@@ -12,7 +12,7 @@ namespace img_lib {
 PACKED_STRUCT_BEGIN BitmapFileHeader {
     char sign1 = 'B';
     char sign2 = 'M';
-    uint32_t size;
+    uint size;
     int reserve = 0;
     uint start_data_offset;
 }
@@ -78,15 +78,23 @@ bool SaveBMP(const Path& file, const Image& image) {
 
 Image LoadBMP(const Path& file) {
     ifstream in(file, ios::binary);
+    if(!in.is_open()) {
+        return {};
+    }
 
     BitmapFileHeader file_header;
     BitmapInfoHeader info_header;
 
     in.read(reinterpret_cast<char*>(&file_header),sizeof(file_header));
+    if(file_header.sign1 != 'B' || file_header.sign2 != 'M') {
+        return {};
+    }
+
     in.read(reinterpret_cast<char*>(&info_header),sizeof(info_header));
 
     const int w = info_header.img_width;
     const int h = info_header.img_height;
+    assert(w > 0 && h > 0);
 
     const int stride = GetBMPStride(w);
 
